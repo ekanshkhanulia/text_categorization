@@ -1,4 +1,4 @@
-# assignment.py
+
 # Tasks 1–3: Load data, run 3 classifiers × 3 features, print macro precision, recall, and F1
 
 
@@ -97,7 +97,7 @@ def main():
     print("Loading 20 Newsgroups data...")
     X_train, y_train, X_test, y_test, target_names = load_data()
 
-    print("Starting Task 2 + Task 3 Experiments...")
+    print("Starting Experiments...")
     run_experiments(X_train, y_train, X_test, y_test)
 
     
