@@ -100,7 +100,7 @@ def main():
     print("Starting Task 2 + Task 3 Experiments...")
     run_experiments(X_train, y_train, X_test, y_test)
 
-    # Placeholder call
+    
     task4()
 
 if __name__ == "__main__":
