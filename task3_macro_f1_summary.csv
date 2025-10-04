@@ -1,4 +1,4 @@
 Classifier,Count,TF,TF-IDF
-LinearSVC,0.564,0.651,0.681
-LogReg,0.589,0.54,0.659
-NaiveBayes,0.512,0.472,0.585
+LinearSVC,0.564,0.651,0.673
+LogReg,0.589,0.54,0.674
+NaiveBayes,0.512,0.472,0.646
