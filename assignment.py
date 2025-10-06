@@ -143,15 +143,90 @@ def run_task_3(categories):
     summary_table.to_csv("task3_macro_f1_summary.csv")
 
 #  Task 4 
-def run_task_4():
-    print("\n Task 4")
+def run_task_4(best_clf, X_train, y_train, X_test, y_test):
+    """
+    Run experiments with different TfidfVectorizer parameters
+    using the best classifier found in Task 3.
+    """
+    print("\n Task 4: TfidfVectorizer Parameter Experiments\n")
+    # Parameter grids for Task 4
+    param_grid = [
+        {"lowercase": True},
+        {"lowercase": False}, # test case sensitivity
+
+        {"stop_words": None},
+        {"stop_words": "english"}, # remove stop words like "the", "is", etc.
+
+        {"ngram_range": (1,1)},
+        {"ngram_range": (1,2)},
+        {"ngram_range": (1,3)},
+        {"ngram_range": (2,2)},   # only bigrams
+        {"analyzer": "char", "ngram_range": (3,5)},
+        {"analyzer": "char", "ngram_range": (2,4)},
+        {"analyzer": "char", "ngram_range": (4,6)},
+        {"analyzer": "char", "ngram_range": (5,7)},
+
+        {"max_features": 5000},
+        {"max_features": 10000},
+        {"max_features": 20000},
+        {"max_features": 30000},
+        {"max_features": None},  # all features
+    ]
+
+    results = []
+
+    print("\n=== Running TfidfVectorizer Parameter Experiments (Task 4) ===")
+    for params in param_grid: # loop over each param setting
+        # Build kwargs for TfidfVectorizer
+        vec_kwargs = {"ngram_range": (1,1)}  # default
+        vec_kwargs.update(params)            # override with test param(s)
+
+        # Build pipeline
+        pipe = Pipeline([
+            ("vec", TfidfVectorizer(**vec_kwargs)),
+            ("clf", best_clf)
+        ])
+
+        # Train & predict
+        pipe.fit(X_train, y_train)
+        y_pred = pipe.predict(X_test)
+
+        # Metrics
+        precision = precision_score(y_test, y_pred, average="macro")
+        recall = recall_score(y_test, y_pred, average="macro")
+        f1 = f1_score(y_test, y_pred, average="macro")
+
+        # Store results
+        results.append({
+            "Parameter": ",".join(params.keys()),
+            "Value": ",".join([str(v) for v in params.values()]),
+            "Macro Precision": round(precision, 3),
+            "Macro Recall": round(recall, 3),
+            "Macro F1": round(f1, 3)
+        })
+
+
+        print(f"Params {params} → F1={f1:.3f}")
+
+    # Save results
+    df = pd.DataFrame(results)
+    df.to_csv("task4_vectorizer_experiments.csv", index=False)
+
+    print("\n=== Summary Table (All Results) ===")
+    print(df.to_string(index=False))
+
+    return df
 
 
 def main():
     categories = run_task_1()
     run_task_2(categories)
     run_task_3(categories)
-    run_task_4()
+    best_clf = LinearSVC()  # From Task 3 results, LinearSVC was best
+    train, test = load_data(categories)
+    X_train, y_train = train.data, train.target
+    X_test, y_test = test.data, test.target
+    run_task_4(best_clf, X_train, y_train, X_test, y_test)
 
 if __name__ == "__main__":
    main()
