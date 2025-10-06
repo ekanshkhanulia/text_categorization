@@ -2,7 +2,7 @@ Classifier,Feature,Macro Precision,Macro Recall,Macro F1
 NaiveBayes,Count,0.762,0.764,0.745
 NaiveBayes,TF,0.792,0.682,0.673
 NaiveBayes,TF-IDF,0.84,0.81,0.809
-LogReg,Count,0.787,0.784,0.783
+LogReg,Count,0.786,0.783,0.783
 LogReg,TF,0.724,0.714,0.713
 LogReg,TF-IDF,0.841,0.831,0.833
 LinearSVC,Count,0.782,0.779,0.779
