@@ -151,26 +151,25 @@ def run_task_4(best_clf, X_train, y_train, X_test, y_test):
     print("\n Task 4: TfidfVectorizer Parameter Experiments\n")
     # Parameter grids for Task 4
     param_grid = [
+        # Lowercasing
         {"lowercase": True},
-        {"lowercase": False}, # test case sensitivity
+        {"lowercase": False},
 
+        # Stop words
         {"stop_words": None},
-        {"stop_words": "english"}, # remove stop words like "the", "is", etc.
+        {"stop_words": "english"},
 
-        {"ngram_range": (1,1)},
-        {"ngram_range": (1,2)},
-        {"ngram_range": (1,3)},
-        {"ngram_range": (2,2)},   # only bigrams
-        {"analyzer": "char", "ngram_range": (3,5)},
-        {"analyzer": "char", "ngram_range": (2,4)},
-        {"analyzer": "char", "ngram_range": (4,6)},
-        {"analyzer": "char", "ngram_range": (5,7)},
+        # N-gram and analyzer settings
+        {"ngram_range": (1, 1)},        # unigrams
+        {"ngram_range": (1, 2)},        # unigrams + bigrams
+        {"ngram_range": (1, 3)},        # unigrams + bigrams + trigrams
+        {"analyzer": "char", "ngram_range": (3, 5)},  # character 3–5-grams
+        {"analyzer": "char", "ngram_range": (2, 4)},  # character 2–4-grams
 
+        # Vocabulary size (feature limits)
+        {"max_features": None},
+        {"max_features": 3000},
         {"max_features": 5000},
-        {"max_features": 10000},
-        {"max_features": 20000},
-        {"max_features": 30000},
-        {"max_features": None},  # all features
     ]
 
     results = []
@@ -220,8 +219,8 @@ def run_task_4(best_clf, X_train, y_train, X_test, y_test):
 
 def main():
     categories = run_task_1()
-    run_task_2(categories)
-    run_task_3(categories)
+    #run_task_2(categories)
+    #run_task_3(categories)
     best_clf = LinearSVC()  # From Task 3 results, LinearSVC was best
     train, test = load_data(categories)
     X_train, y_train = train.data, train.target
