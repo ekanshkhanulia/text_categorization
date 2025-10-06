@@ -1,6 +1,8 @@
 from time import time
 from sklearn.datasets import fetch_20newsgroups
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer, TfidfVectorizer
+import matplotlib.pyplot as plt
+from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
 
 # Three classifiers
 from sklearn.naive_bayes import MultinomialNB
@@ -10,6 +12,7 @@ from sklearn.svm import LinearSVC
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import precision_score, recall_score, f1_score
 import pandas as pd
+import numpy as np
 
 RANDOM_STATE = 42
 
@@ -216,8 +219,167 @@ def run_task_4(best_clf, X_train, y_train, X_test, y_test):
 
     return df
 
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+import matplotlib.pyplot as plt
+from sklearn.pipeline import Pipeline
+from sklearn.svm import LinearSVC
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+
+def plot_best_confusion_matrix(X_train, y_train, X_test, y_test, target_names):
+    print("\n=== Generating Confusion Matrix for Best Model (ngram_range=(1,2)) ===")
+
+    target_names = [
+        "Atheism",
+        "Graphics",
+        "Windows (OS)",
+        "IBM PC",
+        "Mac HW",
+        "Windows X",
+        "For Sale",
+        "Autos",
+        "Motorcycles",
+        "Baseball",
+        "Hockey",
+        "Cryptography",
+        "Electronics",
+        "Medicine",
+        "Space",
+        "Christianity",
+        "Politics (Guns)",
+        "Politics (Mideast)",
+        "Politics (Misc)",
+        "Religion (Misc)"
+    ]
+
+    # Define and train pipeline
+    pipe = Pipeline([
+        ("vec", TfidfVectorizer(ngram_range=(1, 2))),
+        ("clf", LinearSVC())
+    ])
+    pipe.fit(X_train, y_train)
+    y_pred = pipe.predict(X_test)
+
+    # Compute confusion matrix
+    cm = confusion_matrix(y_test, y_pred)
+
+    # Plot
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=target_names)
+    fig, ax = plt.subplots(figsize=(10, 10))
+    disp.plot(ax=ax, cmap='Blues', colorbar=False, xticks_rotation='vertical')
+    plt.title("Confusion Matrix of LinearSVC with TF-IDF (1,2) n-grams", pad=15)
+    plt.tight_layout()
+
+    # Save BEFORE showing
+    output_path = r"G:\My Drive\masters_leiden\text_mining\assignment_01\text_categorization\confusion_matrix_best.pdf"
+    plt.savefig(output_path, format="pdf", dpi=300, bbox_inches='tight')
+    print(f"\nConfusion matrix saved as: {output_path}")
+
+    # Then show
+    plt.show()
+    plt.close(fig)
+
+
+def plot_feature_effects_misclassified(X_train, y_train, X_test, y_test, target_names, top_k_classes=5, top_n_words=5):
+    """
+    Plot top predictive features for the 5 most misclassified categories
+    using LinearSVC + TF-IDF (ngram_range=(1,2)),
+    styled like the original 'feature effects' plot.
+    """
+    print("\n=== Generating feature effect plot for most misclassified classes ===")
+
+    # Train model
+    pipe = Pipeline([
+        ("vec", TfidfVectorizer(ngram_range=(1, 2))),
+        ("clf", LinearSVC())
+    ])
+    pipe.fit(X_train, y_train)
+    clf = pipe.named_steps["clf"]
+    vec = pipe.named_steps["vec"]
+
+    feature_names = np.array(vec.get_feature_names_out())
+
+    # Compute confusion matrix
+    y_pred = pipe.predict(X_test)
+    cm = confusion_matrix(y_test, y_pred)
+    misclassified_counts = np.sum(cm, axis=1) - np.diag(cm)
+    top_misclassified_idx = np.argsort(misclassified_counts)[-top_k_classes:][::-1]
+    selected_labels = [target_names[i] for i in top_misclassified_idx]
+
+    print("\nMost misclassified classes:")
+    for lbl, count in zip(selected_labels, misclassified_counts[top_misclassified_idx]):
+        print(f"  {lbl}: {count} misclassified")
+
+    # Select top 5 features for each of the 5 most misclassified classes
+    top_features_dict = {}
+    top_indices = []
+
+    for i in top_misclassified_idx:
+        coefs = clf.coef_[i]
+        top_idx = np.argsort(coefs)[-top_n_words:][::-1]  # Top 5 per class
+        top_features = feature_names[top_idx]
+        top_features_dict[target_names[i]] = top_features
+        top_indices.extend(top_idx)
+
+        print(f"\nTop {top_n_words} words for '{target_names[i]}':")
+        print(", ".join(top_features))
+
+    # Concatenate all top words (no deduplication)
+    top_indices = np.array(top_indices)
+    predictive_words = feature_names[top_indices]
+
+    # Coefficients for selected words and classes
+    selected_coefs = clf.coef_[top_misclassified_idx, :][:, top_indices]
+
+    # === Plot (same style as original) ===
+    bar_size = 0.25
+    padding = 0.75
+    y_locs = np.arange(len(top_indices)) * (4 * bar_size + padding)
+
+    fig, ax = plt.subplots(figsize=(10, 8))
+    for j, label in enumerate(selected_labels):
+        ax.barh(
+            y_locs + (j - 2) * bar_size,
+            selected_coefs[j],
+            height=bar_size,
+            label=label,
+        )
+
+    ax.set(
+        yticks=y_locs,
+        yticklabels=predictive_words,
+        ylim=[0 - 4 * bar_size, len(top_indices) * (4 * bar_size + padding) - 4 * bar_size],
+    )
+    ax.legend(loc="lower right", fontsize=9)
+    plt.title("Top 5 Predictive Words for the 5 Most Misclassified Classes", fontsize=13, pad=15)
+    plt.xlabel("Coefficient weight (importance)")
+    plt.tight_layout()
+    plt.savefig("feature_effects_misclassified_top5.pdf", format="pdf", dpi=300, bbox_inches='tight')
+    plt.show()
 
 def main():
+    target_names = [
+            "Atheism",
+            "Graphics",
+            "Windows (OS)",
+            "IBM PC",
+            "Mac HW",
+            "Windows X",
+            "For Sale",
+            "Autos",
+            "Motorcycles",
+            "Baseball",
+            "Hockey",
+            "Cryptography",
+            "Electronics",
+            "Medicine",
+            "Space",
+            "Christianity",
+            "Politics (Guns)",
+            "Politics (Mideast)",
+            "Politics (Misc)",
+            "Religion (Misc)"
+        ]
     categories = run_task_1()
     #run_task_2(categories)
     #run_task_3(categories)
@@ -225,7 +387,10 @@ def main():
     train, test = load_data(categories)
     X_train, y_train = train.data, train.target
     X_test, y_test = test.data, test.target
-    run_task_4(best_clf, X_train, y_train, X_test, y_test)
+    #run_task_4(best_clf, X_train, y_train, X_test, y_test)
+    plot_best_confusion_matrix(X_train, y_train, X_test, y_test, categories)
+    #plot_feature_effects_misclassified(X_train, y_train, X_test, y_test, target_names)
+
 
 if __name__ == "__main__":
    main()
