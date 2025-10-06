@@ -1,4 +1,4 @@
 Classifier,Macro Precision,Macro Recall,Macro F1
-NaiveBayes,0.712,0.656,0.646
-LogReg,0.69,0.674,0.674
-LinearSVC,0.68,0.672,0.673
+NaiveBayes,0.84,0.81,0.809
+LogReg,0.841,0.831,0.833
+LinearSVC,0.852,0.846,0.846

@@ -1,4 +1,3 @@
-
 from time import time
 from sklearn.datasets import fetch_20newsgroups
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer, TfidfVectorizer
@@ -14,21 +13,31 @@ import pandas as pd
 
 RANDOM_STATE = 42
 
-# Task 1 
-# Load full 20-category dataset 
-def load_data():
-    return fetch_20newsgroups(subset="train", shuffle=True, random_state=RANDOM_STATE, remove=('headers','footers','quotes')), \
-           fetch_20newsgroups(subset="test", shuffle=True, random_state=RANDOM_STATE, remove=('headers','footers','quotes'))
+# Task 1
+def run_task_1():
+    data = fetch_20newsgroups(subset='all')
+    categories = data.target_names
+
+    print("\n Task 1: All 20 Newsgroup Categories\n")
+    for i, cat in enumerate(categories):
+        print(f"{i+1:2d}. {cat}")
+
+    return categories
+
+#  Data Loader 
+def load_data(categories=None, verbose=False, remove=()):#'headers', 'footers', 'quotes'
+    return fetch_20newsgroups(subset="train", categories=categories, shuffle=True, random_state=RANDOM_STATE, remove=remove), \
+           fetch_20newsgroups(subset="test",  categories=categories, shuffle=True, random_state=RANDOM_STATE, remove=remove)
 
 #  Task 2 
-def run_task_2():
-    print("\n Task 2: Comparing 3 Classifiers using TF-IDF  ")
+def run_task_2(categories):
+    print("\n Task 2: Comparing 3 Classifiers using TF-IDF")
 
-    train, test = load_data()
+    train, test = load_data(categories)
     y_train = train.target
     y_test = test.target
 
-    # TF-IDF vectorizer settings 
+    # TF-IDF vectorizer 
     vectorizer = TfidfVectorizer(
         sublinear_tf=True,
         max_df=0.5,
@@ -65,12 +74,10 @@ def run_task_2():
             "Macro F1": round(f1, 3)
         })
 
-    #  Save results
     df = pd.DataFrame(results)
     df.to_csv("task2_classifier_results.csv", index=False)
 
-#  Task 3 
-# Feature extractors 
+# Task 3 
 def vectorizers():
     return {
         "Count": CountVectorizer(),
@@ -84,10 +91,8 @@ def vectorizers():
             min_df=5,
             stop_words="english"
         )
-        
     }
 
-# Classifiers 
 def classifiers():
     return {
         "NaiveBayes": MultinomialNB(),
@@ -95,7 +100,6 @@ def classifiers():
         "LinearSVC": LinearSVC()
     }
 
-# Evaluate each pipeline: return macro-averaged scores
 def evaluate_model(pipeline, X_train, y_train, X_test, y_test):
     pipeline.fit(X_train, y_train)
     y_pred = pipeline.predict(X_test)
@@ -104,10 +108,9 @@ def evaluate_model(pipeline, X_train, y_train, X_test, y_test):
     macro_f1 = f1_score(y_test, y_pred, average='macro')
     return round(macro_precision, 3), round(macro_recall, 3), round(macro_f1, 3)
 
-# Task 3: Run 3x3 experiment (3 classifiers × 3 features)
-def run_task_3():
+def run_task_3(categories):
     print("\n Task 3: 3 Classifiers × 3 Feature Types")
-    train, test = load_data()
+    train, test = load_data(categories)
     X_train_raw, y_train = train.data, train.target
     X_test_raw, y_test = test.data, test.target
 
@@ -129,7 +132,7 @@ def run_task_3():
                 "Macro Recall": recall,
                 "Macro F1": f1
             })
-            print(f"{clf_name} + {vec_name} → Precision: {precision:.3f}, Recall: {recall:.3f}, F1: {f1:.3f}")
+            print(f"{clf_name} + {vec_name}  Precision: {precision:.3f}, Recall: {recall:.3f}, F1: {f1:.3f}")
 
     df = pd.DataFrame(results)
     print("\n Final Summary Table (Macro-F1 Scores) ")
@@ -139,15 +142,16 @@ def run_task_3():
     df.to_csv("task3_full_metrics.csv", index=False)
     summary_table.to_csv("task3_macro_f1_summary.csv")
 
-#  Task 4
+#  Task 4 
 def run_task_4():
-    print("\nTask 4")
+    print("\n Task 4")
 
-#  Main Execution 
+
 def main():
-    run_task_2()
-    run_task_3()
+    categories = run_task_1()
+    run_task_2(categories)
+    run_task_3(categories)
     run_task_4()
 
 if __name__ == "__main__":
-    main()
+   main()
